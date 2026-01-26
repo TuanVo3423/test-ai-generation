@@ -18,9 +18,8 @@ Ensuring code reliability through multi-layered testing strategies.
 
 ```text
 test/
-├── unit/ # Business logic & mapping
 ├── widget/ # UI component behavior
-└── integration/ # End-to-end flows
+└── golden/ # Golden tests
 ```
 
 ## Implementation Guidelines
@@ -42,10 +41,13 @@ test/
 - **Navigator 2.0**: Wrap in `MaterialApp` (provides basic Navigator) or use `RouterDelegate` mocks.
 - **GetX**: Wrap in `GetMaterialApp` for named route testing.
 
+## . Implementation Process
+ - Always do golden test.
+
 ## Reference & Examples
 
-For BLoC testing templates and Robot pattern examples:
-See [references/REFERENCE.md](references/REFERENCE.md).
+For Golden testing templates examples:
+See [references/golden-testing.md](references/golden-testing.md).
 
 ## Related Topics
 

@@ -1,33 +1,16 @@
-# AI Generation (Flutter)
+# ai_generation
 
-This repository contains a Flutter starter following the workspace `.trae` Flutter standards:
+A new Flutter project.
 
-- Feature-based clean architecture under `lib/src/features`
-- `flutter_bloc` for state management
-- `get_it` + `injectable` for dependency injection
-- `go_router` for navigation
-- `dio` + `retrofit` for networking (prepared)
-- `flutter_gen` for typed assets (configured)
+## Getting Started
 
-## Prerequisites
+This project is a starting point for a Flutter application.
 
-- Flutter 3.38.5
+A few resources to get you started if this is your first Flutter project:
 
-## Setup
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
 
-If this is the first time initializing the repo, generate platform folders:
-
-```bash
-flutter create . --project-name ai_generation --org com.example --overwrite
-```
-
-```bash
-flutter pub get
-dart run build_runner build --delete-conflicting-outputs
-```
-
-## Run
-
-```bash
-flutter run
-```
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.

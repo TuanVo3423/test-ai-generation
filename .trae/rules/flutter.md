@@ -1,1 +1,0 @@
-Please use flutter version 3.38.5 for this project.
