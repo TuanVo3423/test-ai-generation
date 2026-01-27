@@ -8,8 +8,9 @@ alwaysApply: false
 
 ## P0 — Output Contract + Priority Gate (MANDATORY)
 
-Any task assigned to the AI in this project is considered **DONE** only if:
--  Golden test is ran and the golden files image are generated for preview.
+Any task assigned to the AI in githis project is considered **DONE** only if:
+-  Golden test is ran and test passes. 
+***Important:*** The golden test must pass for the feature to be considered, the maximum number of retries is 3 times. If the golden test fails after 3 retries, just consider the feature as **DONE**.
 
 ### Output Contract (Post-LLM) — always runs last
 
