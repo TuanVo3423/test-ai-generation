@@ -10,7 +10,8 @@ alwaysApply: false
 
 Any task assigned to the AI in githis project is considered **DONE** only if:
 -  Golden test is ran and test passes. 
-***Important:*** The golden test must pass for the feature to be considered, the maximum number of retries is 3 times. If the golden test fails after 3 retries, just consider the feature as **DONE**.
+- Golden test is ran and test passes.
+  **_Important:_** The golden test must pass for the feature to be considered, the maximum number of retries is 3 times. If the golden test fails after 3 retries, just consider the feature as **DONE**.
 
 ### Output Contract (Post-LLM) — always runs last
 
@@ -55,7 +56,10 @@ You MUST follow the standards defined in the following skills. Use these documen
 
 ### 5. Quality Assurance
 
-- **Testing**: `.trae/skills/flutter/testing/SKILL.md`
+- **Testing (Golden-first)**: `.trae/skills/flutter/testing/SKILL.md`
+  - Step 1: generate target baseline assets: `.trae/skills/flutter/testing/references/asset-golden_testing.md`
+  - Step 2: generate/write golden test file: `.trae/skills/flutter/testing/references/golden-tesing.md`
+  - Step 3: run max 3 attempts (Attempt 1 → Attempt 2 strict vs assets, Attempt 3 `flutter test --update-goldens` for human review)
 
 ## Workflow Checklist (Enforcement)
 
@@ -64,9 +68,9 @@ When implementing a feature, you MUST verify:
 1.  **Architecture**: Are files in `lib/src/ui/<page>/`? Is logic in `interactor`?
 2.  **Dependencies**: Does UI avoid direct API calls? Is DI used correctly?
 3.  **Assets**: Are filenames `snake_case`? Are they defined in `lib/utils/app_assets.dart`?
-    - *No Generation*: Use manual static strings in `Assets` class.
 4.65→  **Localization**: Are strings in `locale_key.dart` + `lang_*.dart`?
 66→  **UI Components (CRITICAL)**: Are page widgets split into `lib/src/ui/<page>/components/`?
 67→    - **REJECT** if the Page file contains monolithic `build()` methods or complex widget trees.
 68→  **Styles**: Are `AppColors` and `AppStyles` used instead of hardcoded values?
 69→  **State**: Is `flutter_bloc` used with `Equatable` states?
+7.  **State**: Is `flutter_bloc` used with `Equatable` states?

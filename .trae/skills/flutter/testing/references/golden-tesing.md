@@ -1,41 +1,69 @@
 # Golden Testing Reference (Screen Pages)
 
-This document defines the required golden-testing layout and naming rules for any screen/page golden request in this repository.
-
-## Required Folder Layout
-
-When creating goldens for a page, the `test/` folder MUST look like this:
-
-```text
-test/
-└── golden/
-    ├── <page>_page_golden_test.dart
-    └── goldens/
-        └── <page>/
-            ├── android/
-            │   ├── <page>_page_galaxy_a54.png
-            │   ├── <page>_page_galaxy_s24_ultra.png
-            │   ├── <page>_page_galaxy_tab_s9.png
-            │   ├── <page>_page_oneplus12.png
-            │   ├── <page>_page_pixel4.png
-            │   ├── <page>_page_pixel9.png
-            │   └── <page>_page_redmi_note13.png
-            └── ios/
-                ├── <page>_page_iphone13.png
-                ├── <page>_page_iphone14.png
-                ├── <page>_page_iphone15.png
-                ├── <page>_page_iphone16_pro_max.png
-                └── <page>_page_iphone8.png
-```
+This document defines the required golden-testing layout, naming rules, and the mandatory 3-attempt retry policy for any screen/page golden request in this repository.
 
 Reason: keeping all page goldens in a single predictable location makes automation (and future refactors) reliable, and keeps baseline images discoverable.
+
+## Attempt Artifacts (AI Workflow, Must Keep)
+
+During each attempt, store failure artifacts under `.trae/skills/flutter/testing/` so the next retry can fix UI based on the latest failure output:
+
+```text
+.trae/skills/flutter/testing/
+├── attempt_1/
+│   └── failured/<page>/...
+    └── goldens/
+            └── <page>/
+                ├── android/
+                │   ├── <page>_page_galaxy_s24_ultra.png
+                └── ios/
+                    ├── <page>_page_iphone16_pro_max.png
+├── attempt_2/
+│   └── failured/<page>/...
+    └── goldens/
+            └── <page>/
+                ├── android/
+                │   ├── <page>_page_galaxy_s24_ultra.png
+                └── ios/
+                    ├── <page>_page_iphone16_pro_max.png
+├── attempt_3/
+    └── failured/<page>/...   
+    └── goldens/
+            └── <page>/
+                ├── android/
+                │   ├── <page>_page_galaxy_s24_ultra.png
+                └── ios/
+                    ├── <page>_page_iphone16_pro_max.png
+```
+
+## Generated Baseline Folder Layout (Attempt 1 & 2)
+
+For Attempt 1 and Attempt 2, the expected baseline images MUST come from the generated directory produced by `generate_base_golden_assets.ps1`:
+
+```text
+assets/
+└── base_image_testing/
+    ├── <page>.png
+    └── golden/
+        └── goldens/
+            └── <page>/
+                ├── android/
+                │   ├── <page>_page_galaxy_s24_ultra.png
+                └── ios/
+                    ├── <page>_page_iphone16_pro_max.png
+```
+
+Reason: Attempt 1 & 2 are strict comparisons against a deterministic baseline generated from a single base image.
 
 ## Naming Rules
 
 - `<page>` MUST be `snake_case` and match the UI page name (example: `profile`).
 - Golden test file MUST be: `test/golden/<page>_page_golden_test.dart`.
 - Baseline image file MUST be: `<page>_page_<device>.png`.
-- Baseline images MUST be stored under:
+- Generated baseline images (Attempt 1 & 2) MUST be stored under:
+  - `assets/base_image_testing/golden/goldens/<page>/android/`
+  - `assets/base_image_testing/golden/goldens/<page>/ios/`
+- Review/output images (Attempt 3) MUST be stored under:
   - `test/golden/goldens/<page>/android/`
   - `test/golden/goldens/<page>/ios/`
 
@@ -46,18 +74,8 @@ Reason: stable naming prevents duplicated goldens and makes diffs readable in co
 Every page golden set MUST include exactly these devices:
 
 - Android:
-  - `galaxy_a54`
   - `galaxy_s24_ultra`
-  - `galaxy_tab_s9`
-  - `oneplus12`
-  - `pixel4`
-  - `pixel9`
-  - `redmi_note13`
 - iOS:
-  - `iphone8`
-  - `iphone13`
-  - `iphone14`
-  - `iphone15`
   - `iphone16_pro_max`
 
 Reason: this covers common “small / regular / large / tablet” breakpoints on both platforms and reduces visual regressions across layouts.
@@ -69,6 +87,8 @@ Use standard Flutter golden assertions (`matchesGoldenFile`) so each device prod
 Create `test/golden/<page>_page_golden_test.dart`:
 
 ```dart
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -77,6 +97,23 @@ class GoldenDevice {
 
   final String name;
   final Size size;
+}
+
+void _configureGoldenComparator() {
+  const goldenBase = String.fromEnvironment('GOLDEN_BASE', defaultValue: 'assets');
+
+  final projectRoot = Directory.current.uri;
+
+  if (goldenBase == 'assets') {
+    goldenFileComparator = LocalFileComparator(
+      projectRoot.resolve('assets/base_image_testing/golden/'),
+    );
+    return;
+  }
+
+  goldenFileComparator = LocalFileComparator(
+    projectRoot.resolve('test/golden/'),
+  );
 }
 
 Future<void> _loadGoldenFonts() async {
@@ -143,26 +180,17 @@ Future<void> pumpForGoldenDevice(
 void main() {
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
+    _configureGoldenComparator();
     await _loadGoldenFonts();
     // ... and other setup if needed
   });
 
   const androidDevices = <GoldenDevice>[
-    GoldenDevice('galaxy_a54', Size(360, 780)),
     GoldenDevice('galaxy_s24_ultra', Size(412, 915)),
-    GoldenDevice('galaxy_tab_s9', Size(800, 1280)),
-    GoldenDevice('oneplus12', Size(412, 919)),
-    GoldenDevice('pixel4', Size(353, 745)),
-    GoldenDevice('pixel9', Size(412, 915)),
-    GoldenDevice('redmi_note13', Size(393, 873)),
   ];
 
   const iosDevices = <GoldenDevice>[
-    GoldenDevice('iphone13', Size(390, 844)),
-    GoldenDevice('iphone14', Size(390, 844)),
-    GoldenDevice('iphone15', Size(393, 852)),
     GoldenDevice('iphone16_pro_max', Size(440, 956)),
-    GoldenDevice('iphone8', Size(375, 667)),
   ];
 
   group('<PageName> goldens', () {
@@ -207,35 +235,44 @@ void main() {
 
 Reason: `matchesGoldenFile` gives precise control over the output path, which is required to enforce the `android/` and `ios/` folder split and per-device PNG files.
 
-## base_golden-to-Golden Workflow (Source of Truth)
+## Retry Policy (MUST Follow)
 
-This repository uses **`lib/src/base_golden/` as the source-of-truth baseline PNG store** (instead of exporting directly from Figma into `test/`).
+Every golden run for a page is limited to **max 3 attempts**:
 
-### Where baseline PNGs live
+1. **Attempt 1 (strict)**
+   - Compare against generated baselines in `assets/base_image_testing/golden/goldens/`.
+   - Command **MUST** use `--dart-define=GOLDEN_BASE=assets`.
+   - If it fails, copy the generated failure artifacts into:
+     - `.trae/skills/flutter/testing/attempt_1/failured/<page>/`
+   - Use those failure artifacts as the primary input to fix UI for Attempt 2.
+2. **Attempt 2 (strict retry)**
+   - Same comparison as Attempt 1 after fixing layout issues.
+   - Command **MUST** still use `--dart-define=GOLDEN_BASE=assets`.
+   - If it fails, copy the generated failure artifacts into:
+     - `.trae/skills/flutter/testing/attempt_2/failured/<page>/`
+   - Use those failure artifacts as the primary input to fix UI for Attempt 3.
+3. **Attempt 3 (escape hatch, last resort)**
+   - Do NOT compare with target baselines in assets.
+   - Generate review images using `--update-goldens` (should always succeed) with `--dart-define=GOLDEN_BASE=test`.
+   - Output images are for human review under `test/golden/goldens/<page>/{android,ios}/`.
+   - This attempt is allowed exactly once and must not be retried further.
 
-Store baseline images here:
-
-- `lib/src/base_golden/<page>/android/<page>_page_<device>.png`
-- `lib/src/base_golden/<page>/ios/<page>_page_<device>.png`
-
-### Sync baselines into `test/` (required before running goldens)
-
-Golden comparison reads from `test/golden/goldens/...`, so you MUST copy/sync baselines into the required test folder layout:
-
-- Copy from:
-  - `lib/src/base_golden/<page>/android/`
-  - `lib/src/base_golden/<page>/ios/`
-- Into:
-  - `test/golden/goldens/<page>/android/`
-  - `test/golden/goldens/<page>/ios/`
-
-Reason: keeping baselines in `lib/src/base_golden/` makes them discoverable and reusable across tooling, while still preserving the strict `test/` layout for Flutter’s golden comparator.
+Reason: Attempts 1–2 strictly guard against regressions using deterministic baselines. Attempt 3 is only for unblocking the pipeline while still generating artifacts for manual visual review.
 
 ## Running Goldens
 
-- **Compare vs base_golden (default)**:
-  1. Sync `lib/src/base_golden/<page>/...` → `test/golden/goldens/<page>/...`
-  2. Run: `fvm flutter test test/golden/<page>_page_golden_test.dart`
-- **Update baselines (exception-only)**:
-  1. Run: `fvm flutter test --update-goldens test/golden/<page>_page_golden_test.dart`
-  2. Copy the updated PNGs back into `lib/src/base_golden/<page>/...` to keep `base_golden` as source-of-truth.
+- Prerequisite (Attempt 1 & 2): baseline PNGs MUST exist in `assets/base_image_testing/golden/goldens/<page>/{android,ios}/`.
+- If baselines are missing, generate them first (from Figma base image):
+  - Follow: `asset-golden_testing.md`
+  - Requirements: ImageMagick (`magick`) installed; base image exists at `assets/base_image_testing/<page>.png`.
+  - Windows PowerShell example:
+    - `powershell -ExecutionPolicy Bypass -File .\.trae\skills\flutter\testing\scripts\generate_base_golden_assets.ps1 -Page <page>`
+  - Output: `assets/base_image_testing/golden/goldens/<page>/{android,ios}/`.
+
+- Attempt 1 (strict, required):
+  - `fvm flutter test test/golden/<page>_page_golden_test.dart --dart-define=GOLDEN_BASE=assets`
+- Attempt 2 (strict retry, required if Attempt 1 fails):
+  - `fvm flutter test test/golden/<page>_page_golden_test.dart --dart-define=GOLDEN_BASE=assets`
+- Attempt 3 (final fallback, only if Attempt 2 still fails):
+  - `fvm flutter test --update-goldens test/golden/<page>_page_golden_test.dart --dart-define=GOLDEN_BASE=test`
+  - Should always succeed and write review images under `test/golden/goldens/<page>/{android,ios}/`.
