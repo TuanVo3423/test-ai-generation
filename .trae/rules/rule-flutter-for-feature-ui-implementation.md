@@ -8,10 +8,10 @@ alwaysApply: false
 
 ## P0 — Output Contract + Priority Gate (MANDATORY)
 
-Any task assigned to the AI in githis project is considered **DONE** only if:
--  Golden test is ran and test passes. 
-- Golden test is ran and test passes.
-  **_Important:_** The golden test must pass for the feature to be considered, the maximum number of retries is 3 times. If the golden test fails after 3 retries, just consider the feature as **DONE**.
+Any task assigned to the AI in this project is considered **DONE** only if:
+
+- Golden test is run and passes (Attempt 1 or Attempt 2).
+  **_Important:_** The golden test must pass for the feature to be considered. The maximum number of retries is 3 attempts. If it still fails after Attempt 3, consider the feature as **DONE** only after generating updated goldens for human review (Attempt 3).
 
 ### Output Contract (Post-LLM) — always runs last
 
@@ -57,9 +57,15 @@ You MUST follow the standards defined in the following skills. Use these documen
 ### 5. Quality Assurance
 
 - **Testing (Golden-first)**: `.trae/skills/flutter/testing/SKILL.md`
+  - This section is enforced. For every new UI feature page, you MUST execute all steps below yourself (do not just describe them).
   - Step 1: generate target baseline assets: `.trae/skills/flutter/testing/references/asset-golden_testing.md`
   - Step 2: generate/write golden test file: `.trae/skills/flutter/testing/references/golden-tesing.md`
   - Step 3: run max 3 attempts (Attempt 1 → Attempt 2 strict vs assets, Attempt 3 `flutter test --update-goldens` for human review)
+  - Per-attempt failures (MANDATORY):
+    - Flutter writes mismatch diffs to: `assets/base_image_testing/golden/failures/`
+    - After EACH attempt, you MUST snapshot failures into:
+      - `.trae/skills/flutter/testing/attempt_<n>/failured/<page>/`
+    - Before the NEXT attempt, clear `assets/base_image_testing/golden/failures/` to avoid mixing artifacts across attempts.
 
 ## Workflow Checklist (Enforcement)
 

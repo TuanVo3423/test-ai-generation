@@ -71,6 +71,13 @@ Store attempt artifacts under `.trae/skills/flutter/testing/`:
     └── failured/   # optional (usually empty)
 ```
 
+## Failure Artifact Rule (Per Attempt)
+
+- Flutter writes strict mismatch diffs into: `assets/base_image_testing/golden/failures/`
+- After EACH attempt, you MUST copy that folder into:
+  - `.trae/skills/flutter/testing/attempt_<n>/failured/<page>/`
+- Before the NEXT attempt, you MUST clear `assets/base_image_testing/golden/failures/` so artifacts do not mix across attempts.
+
 ## Reference & Examples
 
 Golden references:
