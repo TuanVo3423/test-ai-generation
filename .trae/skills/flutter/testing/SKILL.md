@@ -43,34 +43,13 @@ test/
 
 ## Implementation Process
 
-- Always run the Golden workflow for NEW UI screens/pages.
+- **Always do golden test**: Follow the guidelines in `references/golden-testing.md` to ensure visual regressions are caught.
 
-## Golden Workflow (MANDATORY ORDER)
-
-1. Generate target golden assets (from Figma base image): [asset-golden_testing.md](references/asset-golden_testing.md)
-2. Create/Update the page golden test file: [golden-tesing.md](references/golden-tesing.md)
-3. Run goldens using the 2-attempt policy (Attempt 1 → 2).
-
-## Golden Attempts (Max 2, AI Retry Policy)
-
-- Attempt 1 (strict): compare against target baselines (assets).
-- If Attempt 1 fails: inspect diffs, identify the UI mismatch cause, fix the UI/test setup, then rerun strict.
-- Attempt 2 (strict retry): rerun strict after applying the fix.
-- If Attempt 2 still fails: run `flutter test --update-goldens` to generate review images for human review.
-
-## Failure Artifacts
-
-- Flutter writes strict mismatch diffs into: `assets/base_image_testing/golden/failures/`
-- After EACH failed strict attempt, snapshot failure images into:
-  - `.trae/skills/flutter/testing/attempt_<n>/failures/<page>/`
-- Before rerunning strict, clear `assets/base_image_testing/golden/failures/` so artifacts do not mix across runs.
 
 ## Reference & Examples
 
-Golden references:
-
-- [asset-golden_testing.md](references/asset-golden_testing.md)
-- [golden-tesing.md](references/golden-tesing.md)
+For Golden testing templates examples:
+See [references/golden-testing.md](references/golden-testing.md).
 
 ## Related Topics
 
