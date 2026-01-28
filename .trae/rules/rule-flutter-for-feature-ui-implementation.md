@@ -1,6 +1,7 @@
 ---
 alwaysApply: false
 ---
+
 # Rules Flutter Feature Implementation (Trae)
 
 **SCOPE: THIS RULE APPLIES WHEN IMPLEMENTING FEATURES UI.**
@@ -11,7 +12,7 @@ alwaysApply: false
 Any task assigned to the AI in this project is considered **DONE** only if:
 
 - Golden test is run and passes (Attempt 1 or Attempt 2).
-  **_Important:_** The golden test must pass for the feature to be considered. The maximum number of retries is 3 attempts. If it still fails after Attempt 3, consider the feature as **DONE** only after generating updated goldens for human review (Attempt 3).
+  **_Important:_** The golden test must pass for the feature to be considered. The maximum number of retries is 1 (total 2 attempts). If it still fails after Attempt 2, consider the feature as **DONE** only after generating updated goldens for human review (Attempt 2).
 
 ### Output Contract (Post-LLM) — always runs last
 
@@ -60,12 +61,16 @@ You MUST follow the standards defined in the following skills. Use these documen
   - This section is enforced. For every new UI feature page, you MUST execute all steps below yourself (do not just describe them).
   - Step 1: generate target baseline assets: `.trae/skills/flutter/testing/references/asset-golden_testing.md`
   - Step 2: generate/write golden test file: `.trae/skills/flutter/testing/references/golden-tesing.md`
-  - Step 3: run max 3 attempts (Attempt 1 → Attempt 2 strict vs assets, Attempt 3 `flutter test --update-goldens` for human review)
-  - Per-attempt failures (MANDATORY):
-    - Flutter writes mismatch diffs to: `assets/base_image_testing/golden/failures/`
-    - After EACH attempt, you MUST snapshot failures into:
-      - `.trae/skills/flutter/testing/attempt_<n>/failured/<page>/`
-    - Before the NEXT attempt, clear `assets/base_image_testing/golden/failures/` to avoid mixing artifacts across attempts.
+  - Step 3: run strict goldens with 1 retry (max 2 strict attempts)
+    - Attempt 1 (strict): compare against assets baselines.
+    - If Attempt 1 fails: inspect diffs, explain the visual mismatch, fix the UI/test setup, then retry strict.
+    - Attempt 2 (strict retry): rerun strict after applying the fix.
+    - If Attempt 2 still fails: only then run `flutter test --update-goldens` to generate review images for human review.
+  - Failure artifacts (MANDATORY when there is a mismatch):
+    - Mismatch diffs are written to: `assets/base_image_testing/golden/failures/`
+    - After EACH failed strict attempt, snapshot failure images into:
+      - `.trae/skills/flutter/testing/attempt_<n>/failures/<page>/`
+    - Before rerunning strict, clear `assets/base_image_testing/golden/failures/` to avoid mixing artifacts across runs.
 
 ## Workflow Checklist (Enforcement)
 
@@ -74,9 +79,9 @@ When implementing a feature, you MUST verify:
 1.  **Architecture**: Are files in `lib/src/ui/<page>/`? Is logic in `interactor`?
 2.  **Dependencies**: Does UI avoid direct API calls? Is DI used correctly?
 3.  **Assets**: Are filenames `snake_case`? Are they defined in `lib/utils/app_assets.dart`?
-4.65→  **Localization**: Are strings in `locale_key.dart` + `lang_*.dart`?
-66→  **UI Components (CRITICAL)**: Are page widgets split into `lib/src/ui/<page>/components/`?
-67→    - **REJECT** if the Page file contains monolithic `build()` methods or complex widget trees.
-68→  **Styles**: Are `AppColors` and `AppStyles` used instead of hardcoded values?
-69→  **State**: Is `flutter_bloc` used with `Equatable` states?
-7.  **State**: Is `flutter_bloc` used with `Equatable` states?
+    4.65→ **Localization**: Are strings in `locale_key.dart` + `lang_*.dart`?
+    66→ **UI Components (CRITICAL)**: Are page widgets split into `lib/src/ui/<page>/components/`?
+    67→ - **REJECT** if the Page file contains monolithic `build()` methods or complex widget trees.
+    68→ **Styles**: Are `AppColors` and `AppStyles` used instead of hardcoded values?
+    69→ **State**: Is `flutter_bloc` used with `Equatable` states?
+4.  **State**: Is `flutter_bloc` used with `Equatable` states?

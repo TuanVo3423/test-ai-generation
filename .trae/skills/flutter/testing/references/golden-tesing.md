@@ -1,13 +1,13 @@
 # Golden Tests for Screens (Checklist)
 
-Goal: create a screen/page golden test with a strict baseline (Attempt 1–2) and a 3-attempt retry policy.
+Goal: create a screen/page golden test with a strict baseline and a strict 1-retry policy. Run `--update-goldens` only after the strict retry still fails.
 
 ## 0) Mandatory conventions
 
 - `<page>`: snake_case (e.g. `sign_in`)
 - Test file: `test/golden/<page>_page_golden_test.dart`
 - Baselines (Attempt 1&2): `assets/base_image_testing/golden/goldens/<page>/{android,ios}/`
-- Review output (Attempt 3): `test/golden/goldens/<page>/{android,ios}/`
+- Review output (update-goldens): `test/golden/goldens/<page>/{android,ios}/`
 - PNG name: `<page>_page_<device>.png`
 - Device matrix (fixed):
   - android: `galaxy_s24_ultra` (412x915)
@@ -129,7 +129,7 @@ void main() {
 }
 ```
 
-## 3) Retry policy (max 3 attempts)
+## 3) Run policy (strict + 1 retry)
 
 Attempt 1 (strict):
 
@@ -137,15 +137,24 @@ Attempt 1 (strict):
 flutter test test/golden/<page>_page_golden_test.dart --dart-define=GOLDEN_BASE=assets
 ```
 
-If it fails: snapshot + clear failures:
+If it fails:
+
+- Review diffs in: `assets/base_image_testing/golden/failures/`
+- Explain the visual mismatch (what is different and why it likely happens)
+- Fix the UI/test setup (fonts, theme, paddings, images, etc.)
+- Snapshot failures to: `.trae/skills/flutter/testing/attempt_1/failures/<page>/`
+- Clear `assets/base_image_testing/golden/failures/` before rerunning strict
+
+Attempt 2 (strict retry):
 
 ```powershell
-.\.trae\skills\flutter\testing\scripts\collect_golden_failures.ps1 -Attempt 1 -Page "<page>"
+flutter test test/golden/<page>_page_golden_test.dart --dart-define=GOLDEN_BASE=assets
 ```
 
-Attempt 2 (strict retry): rerun Attempt 1 after fixing UI.
+If Attempt 2 still fails:
 
-Attempt 3 (escape hatch): generate review images (no strict compare):
+- Snapshot failures to: `.trae/skills/flutter/testing/attempt_2/failures/<page>/`
+- Then generate review images for human review:
 
 ```powershell
 flutter test --update-goldens test/golden/<page>_page_golden_test.dart --dart-define=GOLDEN_BASE=test
@@ -154,7 +163,5 @@ flutter test --update-goldens test/golden/<page>_page_golden_test.dart --dart-de
 ## 4) Failure artifacts (required when there is a mismatch)
 
 - Mismatch source: `assets/base_image_testing/golden/failures/`
-- Snapshot into:
-  - `.trae/skills/flutter/testing/attempt_1/failured/<page>/`
-  - `.trae/skills/flutter/testing/attempt_2/failured/<page>/`
-  - `.trae/skills/flutter/testing/attempt_3/failured/<page>/`
+- After each failed strict attempt, snapshot failures into `.trae/skills/flutter/testing/attempt_<n>/failures/<page>/`
+- Clear `assets/base_image_testing/golden/failures/` before rerunning strict.
