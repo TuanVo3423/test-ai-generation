@@ -1,41 +1,11 @@
-# Golden Tests for Screens (Checklist)
-
-Goal: create a screen/page golden test with a strict baseline and a strict 1-retry policy. Run `--update-goldens` only after the strict retry still fails.
-
-## 0) Mandatory conventions
-
-- `<page>`: snake_case (e.g. `sign_in`)
-- Test file: `test/golden/<page>_page_golden_test.dart`
-- Baselines (Attempt 1&2): `assets/base_image_testing/golden/goldens/<page>/{android,ios}/`
-- Review output (update-goldens): `test/golden/goldens/<page>/{android,ios}/`
-- PNG name: `<page>_page_<device>.png`
-- Device matrix (fixed):
-  - android: `galaxy_s24_ultra` (412x915)
-  - ios: `iphone16_pro_max` (440x956)
-
-## 1) Step 1 — Generate target baseline assets (required for Attempt 1&2)
-
-Follow: `.trae/skills/flutter/testing/references/asset-golden_testing.md`
-
-Verify these files exist after Step 1:
-
-```text
-assets/base_image_testing/<page>.png
-assets/base_image_testing/golden/goldens/<page>/android/<page>_page_galaxy_s24_ultra.png
-assets/base_image_testing/golden/goldens/<page>/ios/<page>_page_iphone16_pro_max.png
-```
-
-## 2) Step 2 — Write the test (short template)
-
-Create `test/golden/<page>_page_golden_test.dart` using this template:
-
-```dart
 import 'dart:io';
 
-import 'package:ai_generation/src/features/auth/presentation/sign_in_page.dart';
+import 'package:ai_generation/src/localization/app_translations.dart';
+import 'package:ai_generation/src/ui/edit_profile/edit_profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
 
 class GoldenDevice {
   const GoldenDevice(this.name, this.size);
@@ -103,8 +73,11 @@ Future<void> pumpForGoldenDevice(
   });
 
   await tester.pumpWidget(
-    MaterialApp(
+    GetMaterialApp(
       debugShowCheckedModeBanner: false,
+      translations: AppTranslations(),
+      locale: const Locale('ja', 'JP'),
+      fallbackLocale: const Locale('ja', 'JP'),
       theme: ThemeData(
         platform: platform,
         fontFamily: 'NotoSansJP',
@@ -120,49 +93,42 @@ Future<void> pumpForGoldenDevice(
   await _precacheAssets(tester);
 }
 
-Future<void> _fillPasswordAndUnfocus(WidgetTester tester) async {
-  final passwordField = find.byType(TextFormField).last;
-  await tester.enterText(passwordField, 'password');
-  FocusManager.instance.primaryFocus?.unfocus();
-  await tester.pumpAndSettle();
-}
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
+    Get.testMode = true;
     await _loadFonts();
   });
 
   const android = [GoldenDevice('galaxy_s24_ultra', Size(412, 915))];
   const ios = [GoldenDevice('iphone16_pro_max', Size(440, 956))];
 
-  group('sign_in page', () {
+  group('edit_profile page', () {
     setUp(_configureComparator);
+
     for (final d in android) {
       testWidgets('android - ${d.name}', (t) async {
         await pumpForGoldenDevice(
           t,
           platform: TargetPlatform.android,
           size: d.size,
-          child: const SignInPage(),
+          child: const EditProfilePage(),
         );
-        await _fillPasswordAndUnfocus(t);
-        final projectRoot =
-            Platform.environment['PWD'] ?? Directory.current.path;
+
+        final projectRoot = Platform.environment['PWD'] ?? Directory.current.path;
         final baseline = File(
-          '$projectRoot/assets/base_image_testing/golden/goldens/sign_in/android/sign_in_page_${d.name}.png',
+          '$projectRoot/assets/base_image_testing/golden/goldens/edit_profile/android/edit_profile_page_${d.name}.png',
         );
         expect(
           baseline.existsSync(),
           isTrue,
           reason: 'Missing baseline: ${baseline.path}',
         );
+
         await expectLater(
-          find.byType(SignInPage),
-          matchesGoldenFile(
-            'goldens/sign_in/android/sign_in_page_${d.name}.png',
-          ),
+          find.byType(EditProfilePage),
+          matchesGoldenFile('goldens/edit_profile/android/edit_profile_page_${d.name}.png'),
         );
       });
     }
@@ -173,59 +139,25 @@ void main() {
           t,
           platform: TargetPlatform.iOS,
           size: d.size,
-          child: const SignInPage(),
+          child: const EditProfilePage(),
         );
-        await _fillPasswordAndUnfocus(t);
-        final projectRoot =
-            Platform.environment['PWD'] ?? Directory.current.path;
+
+        final projectRoot = Platform.environment['PWD'] ?? Directory.current.path;
         final baseline = File(
-          '$projectRoot/assets/base_image_testing/golden/goldens/sign_in/ios/sign_in_page_${d.name}.png',
+          '$projectRoot/assets/base_image_testing/golden/goldens/edit_profile/ios/edit_profile_page_${d.name}.png',
         );
         expect(
           baseline.existsSync(),
           isTrue,
           reason: 'Missing baseline: ${baseline.path}',
         );
+
         await expectLater(
-          find.byType(SignInPage),
-          matchesGoldenFile('goldens/sign_in/ios/sign_in_page_${d.name}.png'),
+          find.byType(EditProfilePage),
+          matchesGoldenFile('goldens/edit_profile/ios/edit_profile_page_${d.name}.png'),
         );
       });
     }
   });
 }
-```
 
-## 3) Run policy (strict + 1 retry)
-
-Attempt 1 (strict):
-
-```powershell
-flutter test test/golden/<page>_page_golden_test.dart --dart-define=GOLDEN_BASE=assets
-```
-
-If it fails:
-
-- Review diffs in: `assets/base_image_testing/golden/failures/`
-- Explain the visual mismatch (what is different and why it likely happens)
-- Fix the UI/test setup (fonts, theme, paddings, images, etc.)
-- Clear `assets/base_image_testing/golden/failures/` before rerunning strict
-
-Attempt 2 (strict retry):
-
-```powershell
-flutter test test/golden/<page>_page_golden_test.dart --dart-define=GOLDEN_BASE=assets
-```
-
-If Attempt 2 still fails:
-
-- Then generate review images for human review:
-
-```powershell
-flutter test --update-goldens test/golden/<page>_page_golden_test.dart --dart-define=GOLDEN_BASE=test
-```
-
-## 4 Failure artifacts (required when there is a mismatch)
-
-- Mismatch source: `assets/base_image_testing/golden/failures/`
-- Clear `assets/base_image_testing/golden/failures/` before rerunning strict.

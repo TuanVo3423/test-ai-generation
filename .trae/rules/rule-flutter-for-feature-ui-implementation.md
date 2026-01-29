@@ -10,9 +10,7 @@ alwaysApply: false
 ## P0 — Output Contract + Priority Gate (MANDATORY)
 
 Any task assigned to the AI in this project is considered **DONE** only if:
-
-- Golden test is run and passes (Attempt 1 or Attempt 2).
-  **_Important:_** The golden test must pass for the feature to be considered. The maximum number of retries is 1 (total 2 attempts). If it still fails after Attempt 2, consider the feature as **DONE** only after generating updated goldens for human review (Attempt 2).
+ - the final output fully complies with the Output Contract and passes the Priority Gate.
 
 ### Output Contract (Post-LLM) — always runs last
 
@@ -61,16 +59,10 @@ You MUST follow the standards defined in the following skills. Use these documen
   - This section is enforced. For every new UI feature page, you MUST execute all steps below yourself (do not just describe them).
   - Step 1: generate target baseline assets: `.trae/skills/flutter/testing/references/asset-golden_testing.md`
   - Step 2: generate/write golden test file: `.trae/skills/flutter/testing/references/golden-tesing.md`
-  - Step 3: run strict goldens with 1 retry (max 2 strict attempts)
-    - Attempt 1 (strict): compare against assets baselines.
-    - If Attempt 1 fails: inspect diffs, explain the visual mismatch, fix the UI/test setup, then retry strict.
-    - Attempt 2 (strict retry): rerun strict after applying the fix.
-    - If Attempt 2 still fails: only then run `flutter test --update-goldens` to generate review images for human review.
-  - Failure artifacts (MANDATORY when there is a mismatch):
-    - Mismatch diffs are written to: `assets/base_image_testing/golden/failures/`
-    - After EACH failed strict attempt, snapshot failure images into:
-      - `.trae/skills/flutter/testing/attempt_<n>/failures/<page>/`
-    - Before rerunning strict, clear `assets/base_image_testing/golden/failures/` to avoid mixing artifacts across runs.
+  - Step 3: After retry, return a detailed result report including:
+    - **Success**: If the golden test passes.
+    - **Failure**: If the golden test fails, describe the differences and the expected behavior.
+    - **Fixes**: List of changes made to fix the test.
 
 ## Workflow Checklist (Enforcement)
 

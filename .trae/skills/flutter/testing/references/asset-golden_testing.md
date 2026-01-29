@@ -1,4 +1,4 @@
-asset_golden_testing
+### asset_golden_testing
 
 - This is ALWAYS step 1 for page goldens.
 - Source of truth: full-screen UI screenshots exported from Figma.
